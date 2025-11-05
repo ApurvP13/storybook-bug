@@ -1,64 +1,45 @@
-# UnoCSS utility classes not working in Storybook 10 with webpack (v0.61.x)
+# UnoCSS utility classes not working in Storybook 10 with webpack
 
 ## Summary
 
-UnoCSS utility classes are **not being applied** when using `@storybook/react-webpack5` with the `@unocss/webpack` plugin in **UnoCSS v0.61.x**. The webpack plugin runs during compilation, but the generated styles are either empty or not injected into the page.
-
-**This issue is fixed in UnoCSS v0.63.6+** ✅
+UnoCSS utility classes are **not being applied** when using `@storybook/react-webpack5` with the `@unocss/webpack` plugin. The webpack plugin appears to run during compilation, but the generated styles are either empty or not injected into the page.
 
 ## Environment
 
-### Versions with the Bug 🐛
+**Storybook:**
+- `storybook`: `10.0.4`
+- `@storybook/react-webpack5`: `10.0.4`
+- `@storybook/addon-webpack5-compiler-swc`: `4.0.1`
+- `@storybook/preset-scss`: `1.0.3`
 
-```json
-{
-  "unocss": "0.61.3",
-  "@unocss/webpack": "0.61.9",
-  "@unocss/reset": "0.61.0",
-  "storybook": "10.0.4",
-  "@storybook/react-webpack5": "10.0.4",
-  "@storybook/addon-webpack5-compiler-swc": "4.0.1",
-  "webpack": "5.97.1"
-}
-```
+**UnoCSS:**
+- `unocss`: `0.61.3`
+- `@unocss/webpack`: `0.61.9`
+- `@unocss/reset`: `0.61.0`
 
-### Versions that Work ✅
+**Build Tools:**
+- `webpack`: `5.97.1`
+- `css-loader`: `7.1.2`
+- `style-loader`: `4.0.0`
+- `sass-loader`: `16.0.6`
 
-```json
-{
-  "unocss": "0.63.6",
-  "@unocss/webpack": "0.63.6",
-  "@unocss/reset": "0.63.6"
-}
-```
-
-**Additional packages:**
+**Framework:**
 - React 18.3.1
 - TypeScript 5.5.2
-- `@storybook/preset-scss`: 1.0.3
-- `sass`: 1.83.0+
+- Node.js >= 18.18.0
 
-## Reproduction
+## Reproduction Repository
 
 A complete minimal reproduction is available at:
-**[storybook-unocss-reproduction](https://github.com/yourusername/storybook-unocss-reproduction)** _(update with your repo URL)_
+**https://github.com/yourusername/storybook-unocss-reproduction** _(update with actual URL)_
 
-### Quick Reproduction Steps
+### Steps to Reproduce
 
 1. Clone the reproduction repository
 2. Install dependencies: `npm install`
 3. Run Storybook: `npm run storybook`
 4. Open the **"UnoCSS/GithubChip"** story
 5. **Observe:** UnoCSS utility classes have no styling applied
-
-### To See It Working
-
-1. Upgrade UnoCSS packages:
-   ```bash
-   npm install --save-dev unocss@^0.63.6 @unocss/webpack@^0.63.6 @unocss/reset@^0.63.6
-   ```
-2. Restart Storybook
-3. **Observe:** All UnoCSS utility classes now work perfectly
 
 ## Configuration
 
@@ -134,9 +115,10 @@ import type { Preview } from '@storybook/react-webpack5';
 
 import "@unocss/reset/tailwind-compat.css";
 
-// UnoCSS styles - this import works in 0.63.6+ but not in 0.61.x
+// UnoCSS styles
 import "uno.css";
 
+// Custom styles
 import "../src/styles/index.scss";
 import "../src/styles/variables.scss";
 
@@ -216,6 +198,76 @@ export default defineConfig({
 });
 ```
 
+### Example Story Component
+
+The reproduction includes a `GithubChip` component that demonstrates the issue:
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
+
+interface GithubChipProps {
+  repoName: string;
+  onRemove: () => void;
+  chatStarted: boolean;
+  isInChat?: boolean;
+}
+
+function GithubChip({
+  repoName,
+  onRemove,
+  chatStarted,
+  isInChat = false,
+}: GithubChipProps) {
+  const chipClasses = isInChat
+    ? "h-6 px-2 py-1 text-xs"
+    : `px-3 py-2 ${chatStarted ? "text-sm" : "text-base"}`;
+
+  return (
+    <div className="relative mr-2 group">
+      {/* These UnoCSS classes don't work */}
+      <div className={`inline-flex items-center gap-1 ${chipClasses} rounded-full bg-fiddle-elements-background-depth-2 border border-fiddle-elements-borderColor text-fiddle-elements-textPrimary`}>
+        <span className="i-ph:github-logo-fill" />
+        {repoName}
+      </div>
+      <button
+        onClick={onRemove}
+        className={`absolute -top-2 -right-2 bg-fiddle-elements-code-background text-white rounded-full ${isInChat ? "w-4 h-4" : "w-6 h-6"} flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity`}
+        title="Remove Repository"
+      >
+        <span className={`i-ph:x ${isInChat ? "text-[10px]" : ""}`} />
+      </button>
+    </div>
+  );
+}
+
+const meta: Meta<typeof GithubChip> = {
+  title: 'UnoCSS/GithubChip',
+  component: GithubChip,
+  parameters: {
+    layout: 'centered',
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof GithubChip>;
+
+export const Default: Story = {
+  args: {
+    repoName: 'fiddle-website',
+    chatStarted: false,
+    isInChat: false,
+  },
+};
+
+export const InChat: Story = {
+  args: {
+    repoName: 'storybook-unocss-repro',
+    chatStarted: true,
+    isInChat: true,
+  },
+};
+```
+
 ## Expected Behavior
 
 When using UnoCSS utility classes in story components:
@@ -234,105 +286,137 @@ When using UnoCSS utility classes in story components:
 - ✅ Custom theme colors work
 - ✅ No module resolution errors
 
-## Actual Behavior (v0.61.x)
+## Actual Behavior
 
 - ❌ UnoCSS webpack plugin runs (visible in logs: `<s> [webpack.Progress] 8% setup compilation unocss:webpack`)
-- ❌ But generated CSS is empty or not injected
+- ❌ But generated CSS appears to be empty or not injected
 - ❌ All utility classes have no styling effect
 - ❌ Icons don't render (empty spans)
 - ❌ Custom theme colors don't work
-- ✅ Regular SCSS styles work fine (proves webpack CSS pipeline is functional)
+- ✅ Regular SCSS styles work fine (proving webpack CSS pipeline is functional)
 
-### Console/Network
+### Visual Comparison
 
-- No JavaScript errors
-- `uno.css` module resolves but contains no actual CSS rules
-- Storybook compiles successfully with no warnings
+**What the story looks like (all UnoCSS classes have no effect):**
+- No background colors
+- No padding or spacing
+- No borders or rounded corners
+- No icons visible
+- No flex layout
 
-## Analysis
+**What it should look like:**
+- Blue/red/green backgrounds with colors
+- Proper padding and spacing
+- Rounded corners and borders
+- GitHub icon visible
+- Flex layout with gaps
 
-### What We Found
+### Console/Network/Build Output
 
-1. **The issue is specific to UnoCSS v0.61.x** when used with:
-   - Storybook 10.x
-   - `@storybook/react-webpack5`
-   - `transformerDirectives()`
-   - `presetIcons()`
+- ✅ No JavaScript errors in console
+- ✅ Storybook compiles successfully with no warnings
+- ✅ Webpack build completes without errors
+- ❌ `uno.css` module resolves but appears to contain no CSS rules
+- ✅ SCSS files load and work correctly
 
-2. **Upgrading to UnoCSS v0.63.6 completely fixes the issue** with zero configuration changes
+## Observations
 
-3. **SCSS styles work fine** in the same Storybook setup, proving:
-   - Webpack is configured correctly
-   - CSS loaders are functional
-   - The issue is specific to UnoCSS integration
+### What Works
 
-### Root Cause (Hypothesis)
+1. ✅ **SCSS styles work perfectly** in the same Storybook setup
+   - Custom SCSS classes apply correctly
+   - CSS variables work
+   - Sass compilation works
+   - Proves webpack CSS loaders are functional
 
-The UnoCSS v0.61.x webpack plugin appears to have an issue with:
-- Virtual module generation in webpack 5
-- CSS injection into Storybook's webpack compilation
-- Compatibility with Storybook's webpack configuration
+2. ✅ **UnoCSS works in main app** (using Vite)
+   - Same `uno.config.ts`
+   - Same utility classes
+   - Same components
+   - Everything works perfectly
 
-This was likely fixed between v0.61.x and v0.63.x in the UnoCSS codebase.
+3. ✅ **Webpack compilation succeeds**
+   - No build errors
+   - No module resolution errors
+   - UnoCSS plugin appears in webpack progress logs
 
-## Solution ✅
+### What Doesn't Work
 
-### For Users Experiencing This Issue
+1. ❌ **All UnoCSS utility classes** have no effect
+   - Basic utilities: `bg-*`, `text-*`, `p-*`, `m-*`
+   - Layout utilities: `flex`, `grid`, `gap-*`
+   - Typography: `font-*`, `text-*`
+   - Borders: `border-*`, `rounded-*`
 
-Upgrade to UnoCSS v0.63.6 or later:
+2. ❌ **Icon classes** don't work
+   - `i-ph:github-logo-fill` renders as empty span
+   - No icon SVG is injected
 
-```bash
-npm install --save-dev unocss@^0.63.6 @unocss/webpack@^0.63.6 @unocss/reset@^0.63.6
-```
+3. ❌ **Custom theme colors** don't work
+   - `bg-fiddle-elements-background-depth-2` has no effect
+   - CSS variables are defined in SCSS but UnoCSS doesn't use them
 
-or with pnpm:
-
-```bash
-pnpm add -D unocss@^0.63.6 @unocss/webpack@^0.63.6 @unocss/reset@^0.63.6
-```
-
-No other configuration changes needed. Restart Storybook and everything works.
+4. ❌ **Transformers** appear not to be working
+   - `transformerDirectives()` classes have no effect
 
 ## Additional Context
 
 ### Project Context
 
 - Main application uses **Vite + UnoCSS** (works perfectly)
-- Storybook uses **webpack + UnoCSS** (broken in v0.61.x, fixed in v0.63.6)
-- Reason for webpack: Project-specific requirements (e2b integration, etc.)
+- Storybook uses **webpack + UnoCSS** (doesn't work)
+- Using webpack for Storybook due to specific project requirements (e2b integration)
+- UnoCSS config is identical between Vite app and Storybook
 
-### Workarounds Attempted (Before Finding the Fix)
+### Workarounds Attempted
 
-All of these failed with v0.61.x:
+All of these failed:
 - ❌ Different import paths (`uno.css`, `virtual:uno.css`, `@unocss/reset`)
-- ❌ Different plugin options (`mode`, `hmr`, `configFile` paths)
-- ❌ Adding/removing CSS loaders
-- ❌ Changing plugin order in webpack config
-- ❌ Manually configuring webpack module rules
+- ❌ Different plugin options (`mode: "build"`, `mode: "global"`, with/without `hmr`)
+- ❌ Different plugin positions (`.push()`, `.unshift()`, middle of array)
+- ❌ Removing other CSS-related plugins
+- ❌ Adding explicit CSS module rules
+- ❌ Using `webpack-merge` for config merging
+- ❌ Removing `@storybook/preset-scss`
+- ❌ Different content include patterns
+- ❌ Removing `transformerDirectives()` and `presetIcons()`
 
-### Why This Issue Matters
+### Build Logs
 
-Many developers are migrating to or using Storybook 10.x with webpack for various reasons (legacy compatibility, specific webpack features, build tool constraints, etc.). If they're using UnoCSS v0.61.x, they'll encounter this bug and waste significant time debugging what appears to be a configuration issue but is actually a version-specific bug.
+When running `npm run storybook`, the logs show:
 
-## Related Issues
+```
+<s> [webpack.Progress] 8% setup compilation unocss:webpack
+```
 
-- [Add links to any related UnoCSS or Storybook issues if known]
+This indicates the UnoCSS plugin is being registered and running, but the generated CSS is either:
+1. Empty
+2. Not being injected into the page
+3. Being overridden/removed by another plugin
 
-## Checklist
+## Questions for Maintainers
 
-- [x] Minimal reproduction repository created
-- [x] Tested with multiple UnoCSS versions (0.61.3, 0.61.9, 0.63.6)
-- [x] Verified the fix (upgrade to 0.63.6+)
-- [x] Confirmed SCSS works in same environment (not a general webpack issue)
-- [x] Documented exact package versions
-- [x] Provided complete configuration files
+1. Is there official documentation for integrating UnoCSS with Storybook's webpack builder?
+2. Does the `@unocss/webpack` plugin require special configuration when used with Storybook?
+3. Are there known conflicts between Storybook's "implicit CSS loaders" and UnoCSS?
+4. Should the virtual module import be `uno.css` or something else for webpack?
+5. Does UnoCSS webpack plugin work correctly with webpack 5's module federation/virtual modules in Storybook's context?
+6. Are there any special considerations when using `transformerDirectives()` and `presetIcons()` with webpack?
+
+## What We Need
+
+- Guidance on proper UnoCSS + Storybook webpack integration
+- Whether this is a bug or configuration issue
+- Any debugging steps to understand why CSS isn't being generated/injected
+- Whether there's a workaround that doesn't involve switching build tools
+
+## Additional Information
+
+- Willing to provide more debugging information if needed
+- Can add logging to webpack config
+- Can test with different configurations
+- Repository includes complete working reproduction
 
 ---
 
-**Note for Maintainers:** If this was indeed fixed between v0.61.x and v0.63.x, it might be worth:
-1. Documenting this in release notes/changelog
-2. Adding a warning for users trying to use v0.61.x with Storybook 10 + webpack
-3. Potentially backporting the fix if v0.61.x is still a supported LTS version
-
-Thank you! 🙏
-
+Thank you for looking into this! UnoCSS works great in our Vite app, and we'd love to get it working in Storybook too. 🙏

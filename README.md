@@ -49,19 +49,16 @@ This repository reproduces the exact issue from a production environment where:
 - Main app uses **Vite + UnoCSS** (works)
 - Storybook uses **webpack + UnoCSS** (broken in v0.61.x)
 
-### Stories Included
+### Story Included
 
-1. **UnoCSS/Test** - Comprehensive test with:
-   - Basic utility classes (colors, spacing, borders)
-   - Flex layouts
-   - Typography utilities
-   - SCSS comparison (to prove webpack CSS pipeline works)
-
-2. **UnoCSS/GithubChip** - Real-world component using:
-   - Icon classes (`i-ph:github-logo-fill`)
-   - Custom theme variables (`bg-fiddle-elements-background-depth-2`)
-   - Responsive sizing
-   - Hover states
+**UnoCSS/GithubChip** - A real-world component demonstrating the issue:
+- Icon classes (`i-ph:github-logo-fill`, `i-ph:x`)
+- Custom theme variables (`bg-fiddle-elements-background-depth-2`)
+- Utility classes (`flex`, `gap-1`, `rounded-full`, `border`, etc.)
+- Responsive sizing with conditional classes
+- Hover states with `group-hover:` modifier
+- Dynamic classes based on props
+- SCSS styles work (proving webpack CSS pipeline is functional)
 
 ## Configuration
 
