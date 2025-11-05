@@ -1,0 +1,31 @@
+// CSS Variables for theming
+:root {
+  --primary-color: #3b82f6;
+  --secondary-color: #8b5cf6;
+  --background-color: #ffffff;
+  --text-color: #1f2937;
+  --border-color: #e5e7eb;
+  
+  // Fiddle theme variables
+  --fiddle-elements-borderColor: #e5e7eb;
+  --fiddle-elements-bg-depth-1: #f5f5f5;
+  --fiddle-elements-bg-depth-2: #e5e5e5;
+  --fiddle-elements-textPrimary: #1f2937;
+  --fiddle-elements-code-background: #f5f5f5;
+}
+
+[data-theme="dark"] {
+  --primary-color: #60a5fa;
+  --secondary-color: #a78bfa;
+  --background-color: #1f2937;
+  --text-color: #f9fafb;
+  --border-color: #374151;
+  
+  // Fiddle theme variables
+  --fiddle-elements-borderColor: #374151;
+  --fiddle-elements-bg-depth-1: #262626;
+  --fiddle-elements-bg-depth-2: #404040;
+  --fiddle-elements-textPrimary: #f9fafb;
+  --fiddle-elements-code-background: #262626;
+}
+
